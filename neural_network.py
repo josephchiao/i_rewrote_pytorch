@@ -2,9 +2,10 @@ import numpy as np
 import os
 import shutil
 import theta_init as theta_init
+import random
 
 class NeuralNetwork:
-    def __init__(self, dim = None, norm_fcn = None):
+    def __init__(self, dim = None, norm_fcn = None, location = None):
         
         self.dim = dim
         if dim is None:
@@ -15,9 +16,13 @@ class NeuralNetwork:
         if norm_fcn is None:
             norm_fcn = [sigmoid] * (self.leng - 1)
         self.norm_fcn = norm_fcn
-        
 
-    def theta_generate(self, n):
+        self.location = location
+        if location is None or type(location) is not str:
+            print('failed')
+            quit()
+
+    def theta_generate(self, n = 1):
 
         """For initializing training set"""
 
@@ -34,14 +39,17 @@ class NeuralNetwork:
 
         for dataset in range(n):
             theta_init.create_file(self.dim,
-                                   file_name = f"/Users/joseph_chiao/Desktop/Advance Research/Machine Learning/i_rewrote_pytorch/matrix_library/nn_theta_set_{dataset}.npz", ## Fix formating
-                                   init_type = "logistic")
+                                   file_name = f"{self.location}/nn_theta_set_{dataset}.npz", ## Fix formating
+                                   init_type = "normal")
 
-    def theta_recover(self, location):
+    def theta_recover(self, i = 0):
 
-        data = np.load(location, allow_pickle=True)
+        data = np.load(f'{self.location}/nn_theta_set_{i}.npz', allow_pickle=True)
         self.theta = [data[f'arr_{i}'] for i in range(self.leng - 1)]
         self.b = [data[f'arr_{i}'] for i in range(self.leng - 1, self.leng * 2 - 2)]
+
+    def theta_save(self, i=0):
+        np.savez(f'{self.location}/nn_theta_set_{i}.npz', *self.theta, *self.b)
 
     def theta_single_use(self):
         
@@ -63,20 +71,31 @@ class NeuralNetwork:
         layers = self.feedforward(X)
         delta = [(y - layers[-1]) * self.norm_fcn[-1](layers[-1], type = 'Derivative')]
         for i in range(2, self.leng):
-            delta.append(np.dot(delta[-1], self.theta[-i+1].T) * self.norm_fcn[-i](layers[-i], type = 'Derivative'))
+            delta.insert(0, (np.dot(delta[-1], self.theta[-i+1].T) * self.norm_fcn[-i](layers[-i], type = 'Derivative')))
         
         for i in range(1, self.leng):
-            self.theta[i-1] += np.dot(layers[i-1].T, delta[-i+3]) * learning_rate
-            self.b[-i] += np.sum(delta[i-1], axis=0, keepdims=True) * learning_rate
+            self.theta[i-1] += np.dot(layers[i-1].T, delta[i-1]) * learning_rate
+            self.b[i-1] += np.sum(delta[-i], axis=0, keepdims=True) * learning_rate
 
         return layers
 
-    def train(self, X, y, epochs, learning_rate):
+    def train(self, X, y, epochs, learning_rate, cutoff_rate = 0, jumppy_learner = False, jumpy_index = (1, 1000)):
+        loss = 100
+        if jumppy_learner:
+            learning_rate = 10**(-random.uniform(jumpy_index[0], jumpy_index[1]))
+
         for epoch in range(epochs):
             layers = self.backward(X, y, learning_rate) 
-            if epoch % 4000 == 0:
-                loss = np.mean(np.square(y - layers[-1]))
+            if epoch % 2000 == 0:
+                loss_new = np.mean(np.square(y - layers[-1]))
+                if abs(loss - loss_new) <= cutoff_rate:
+                    print(f'Epoch {epoch}, Loss:{loss_new}')
+                    return
+                loss = loss_new
+                if jumppy_learner:
+                    learning_rate = 10**(-random.uniform(jumpy_index[0], jumpy_index[1]))
                 print(f'Epoch {epoch}, Loss:{loss}')
+        print(f'Epoch {epoch}, Loss:{loss_new}')
 
 
   
@@ -91,11 +110,12 @@ def ReLU(x, type = 'Normal'):
     return x * (x > 0)
 
 
-NN = NeuralNetwork((2,5,5,4), [ReLU, sigmoid, sigmoid, sigmoid])
-NN.theta_recover('/Users/joseph_chiao/Desktop/Advance Research/Machine Learning/i_rewrote_pytorch/matrix_library/nn_theta_set_0.npz')
-print(NN.feedforward([np.array([[0,1], [1,0]])])[-1])
-NN.train(np.array([[0,1], [1,0]]), np.array([[0,0.25,0.75,1], [0,0,1,1]]), 16001, 2)
-print(NN.feedforward([np.array([[0,1], [1,0]])])[-1])
+# NN = NeuralNetwork((2,5,5,4), [ReLU, sigmoid, sigmoid, sigmoid], 'matrix_library')
+# NN.theta_generate()
+# NN.theta_recover()
+# print(NN.feedforward([np.array([[0,1], [1,0], [1,1]])])[-1])
+# NN.train(np.array([[0,1], [1,0], [1,1]]), np.array([[0,1,0,1], [1,0,1,0], [1,1,0,0]]), 16001, 2)
+# print(NN.feedforward([np.array([[0,1], [1,0], [1,1], [0,0]])])[-1])
 
 
 # # Basic test:
