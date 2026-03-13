@@ -4,6 +4,7 @@ import shutil
 import theta_init as theta_init
 import random
 
+
 class NeuralNetwork:
     def __init__(self, dim = None, norm_fcn = None, location = None):
         
@@ -71,11 +72,11 @@ class NeuralNetwork:
         layers = self.feedforward(X)
         delta = [(y - layers[-1]) * self.norm_fcn[-1](layers[-1], type = 'Derivative')]
         for i in range(2, self.leng):
-            delta.insert(0, (np.dot(delta[-1], self.theta[-i+1].T) * self.norm_fcn[-i](layers[-i], type = 'Derivative')))
+            delta.append(np.dot(delta[-1], self.theta[-i+1].T) * self.norm_fcn[-i](layers[-i], type = 'Derivative'))
         
-        for i in range(1, self.leng):
-            self.theta[i-1] += np.dot(layers[i-1].T, delta[i-1]) * learning_rate
-            self.b[i-1] += np.sum(delta[-i], axis=0, keepdims=True) * learning_rate
+        for i in range(self.leng-1):
+            self.theta[i] += np.dot(layers[i].T, delta[-i-1]) * learning_rate
+            self.b[i] += np.sum(delta[-i-1], axis=0, keepdims=True) * learning_rate
 
         return layers
 
@@ -95,6 +96,7 @@ class NeuralNetwork:
                 if jumppy_learner:
                     learning_rate = 10**(-random.uniform(jumpy_index[0], jumpy_index[1]))
                 print(f'Epoch {epoch}, Loss:{loss}')
+        loss_new = np.mean(np.square(y - layers[-1]))
         print(f'Epoch {epoch}, Loss:{loss_new}')
 
 
@@ -110,11 +112,11 @@ def ReLU(x, type = 'Normal'):
     return x * (x > 0)
 
 
-# NN = NeuralNetwork((2,5,5,4), [ReLU, sigmoid, sigmoid, sigmoid], 'matrix_library')
+# NN = NeuralNetwork((2,5,5,4), [ReLU, sigmoid, sigmoid], 'matrix_library')
 # NN.theta_generate()
 # NN.theta_recover()
 # print(NN.feedforward([np.array([[0,1], [1,0], [1,1]])])[-1])
-# NN.train(np.array([[0,1], [1,0], [1,1]]), np.array([[0,1,0,1], [1,0,1,0], [1,1,0,0]]), 16001, 2)
+# NN.train(np.array([[0,1], [1,0], [1,1]]), np.array([[0,1,0,1], [1,0,1,0], [1,1,0,0]]), 10000, 2)
 # print(NN.feedforward([np.array([[0,1], [1,0], [1,1], [0,0]])])[-1])
 
 
