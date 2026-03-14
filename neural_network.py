@@ -80,6 +80,16 @@ class NeuralNetwork:
 
         return layers
 
+    def take_it_back_now_yall(self, Y):
+        '''anti feedward, if that makes sense'''
+        layers = []
+        layers.append(Y)
+        for i in range(1, self.leng):
+            X_hid = self.norm_fcn[-i](layers[0], type = 'inverse') - self.b[-i]
+            layers.insert(0, np.dot(X_hid, self.theta[-i].T))
+        return layers
+
+
     def train(self, X, y, epochs, learning_rate, cutoff_rate = 0, jumppy_learner = False, jumpy_index = (1, 1000)):
         loss = 100
         if jumppy_learner:
@@ -104,6 +114,8 @@ class NeuralNetwork:
 def sigmoid(x, type = 'Normal'):
     if type == 'Derivative':
         return x * (1 - x)
+    if type == 'inverse':
+        np.log(x/(1-x))
     return 1 / (1 + np.exp(-x))
 
 def ReLU(x, type = 'Normal'):
