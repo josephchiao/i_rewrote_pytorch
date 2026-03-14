@@ -46,12 +46,12 @@ def training_basic(np_array):
     NN.theta_generate()
     NN.theta_recover()
     X, Y = feed_NN_data(np_array)
-    for i in range(100):
+    for i in range(500):
         print(i)
-        NN.train(X[i*100:(i+1)*100], Y[i*100:(i+1)*100], 1000, [0.01, 0.001][i >= 50])
+        NN.train(X[i*100:(i+1)*100], Y[i*100:(i+1)*100], 1000, [0.01, 0.001][i >= 200])
     NN.theta_save()
 
-training_basic(load_training_example())
+# training_basic(load_training_example())
 
 # NN = nnw.NeuralNetwork((784,100,50,10), [nnw.ReLU, nnw.sigmoid, nnw.sigmoid, nnw.sigmoid], 'test_library/MNIST_CSV')
 # NN.theta_generate()
@@ -62,18 +62,36 @@ training_basic(load_training_example())
 # print(np.argmax(NN.feedforward(X[2])[-1]))
 # print(NN.feedforward(X[2])[-1])
 
+zeros = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
+
 NN = nnw.NeuralNetwork((784,100,50,10), [nnw.ReLU, nnw.ReLU, nnw.sigmoid], 'test_library/MNIST_CSV')
 NN.theta_recover()
-X, Y = feed_NN_data(load_training_example(type = 'test'))
-Y_predict_mx = NN.feedforward(X)[-1]
-Y_predict = np.argmax(Y_predict_mx, axis = 1)
-correction_rate = sum([Y[i][Y_predict[i]] for i in range(len(Y_predict))])/len(Y)
-print('correction rate = ', correction_rate)
 
-for i in range(len(Y)):
-    Y_predict_mx = NN.feedforward(X[i])[-1]
-    Y_predict = np.argmax(Y_predict_mx)
-    number_display(np.reshape(X[i], (28,28)), Y_predict)
+
+for i in range(10):
+    X = NN.take_it_back_now_yall(np.array(zeros[i]))[0]
+    number_display(np.reshape(X, (28,28)), i)
+
+
+# X, Y = feed_NN_data(load_training_example(type = 'test'))
+# Y_predict_mx = NN.feedforward(X)[-1]
+# Y_predict = np.argmax(Y_predict_mx, axis = 1)
+# correction_rate = sum([Y[i][Y_predict[i]] for i in range(len(Y_predict))])/len(Y)
+# print('correction rate = ', correction_rate)
+
+# for i in range(len(Y)):
+#     Y_predict_mx = NN.feedforward(X[i])[-1]
+#     Y_predict = np.argmax(Y_predict_mx)
+#     number_display(np.reshape(X[i], (28,28)), Y_predict)
 
 
 
